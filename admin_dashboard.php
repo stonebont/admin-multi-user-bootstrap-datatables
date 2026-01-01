@@ -44,7 +44,7 @@ try {
 
 <nav class="navbar navbar-expand-lg navbar-dark navbar-custom mb-4 shadow-sm">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="#">AdminPanel</a>
+        <a class="navbar-brand fw-bold" href="#">Admin Panel</a>
         <div class="ms-auto d-flex align-items-center">
             <span class="text-white me-3">Selamat Datang, <strong><?= htmlspecialchars($_SESSION['nama']); ?></strong></span>
             <a href="logout.php" class="btn btn-outline-light btn-sm">Logout</a>
