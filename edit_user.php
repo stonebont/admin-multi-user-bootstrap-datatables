@@ -7,6 +7,7 @@ if (!isset($_SESSION['level']) || $_SESSION['level'] != "admin") {
 }
 
 require 'koneksi.php';
+require 'fungsi_log.php';
 
 // Ambil ID dari URL
 $id = $_GET['id'] ?? '';
@@ -44,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $_SESSION['msg'] = "Data user berhasil diperbarui!";
         $_SESSION['msg_type'] = "success";
+		tulis_log($pdo, $_SESSION['username'], "Edit User", "Mengubah data user: " . $username);
         header("Location: admin_dashboard.php");
         exit();
     } catch (PDOException $e) {

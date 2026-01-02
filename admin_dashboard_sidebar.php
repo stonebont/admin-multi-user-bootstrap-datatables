@@ -66,15 +66,6 @@ $logs = $pdo->query("SELECT * FROM logs ORDER BY waktu DESC LIMIT 100")->fetchAl
             #page-content-wrapper { padding-left: 0; }
             body.sb-sidenav-toggled #sidebar-wrapper { margin-left: 0; }
         }
-		
-		@media (max-width: 768px) {
-    /* Saat sidebar terbuka di mobile, berikan efek sedikit gelap pada konten */
-    body.sb-sidenav-toggled #page-content-wrapper {
-        opacity: 0.5;
-        cursor: pointer;
-        pointer-events: auto; /* Memastikan area ini bisa menerima klik */
-    }
-}
     </style>
 </head>
 <body>
@@ -88,11 +79,11 @@ $logs = $pdo->query("SELECT * FROM logs ORDER BY waktu DESC LIMIT 100")->fetchAl
             <a href="admin_dashboard.php" class="list-group-item list-group-item-action active">
                 <i class="bi bi-speedometer2 me-2"></i> Dashboard
             </a>
+            <a href="edit_profil.php" class="list-group-item list-group-item-action">
+                <i class="bi bi-person-circle me-2"></i> Profil Saya
+            </a>
             <a href="#tabelUser" class="list-group-item list-group-item-action">
                 <i class="bi bi-people me-2"></i> Manajemen User
-            </a>
-			<a href="#tabelLogLengkap" class="list-group-item list-group-item-action">
-                <i class="bi bi-clock-history me-2"></i> Riwayat Logs
             </a>
             <div class="mt-auto">
                 <hr class="mx-3 text-secondary">
@@ -118,9 +109,7 @@ $logs = $pdo->query("SELECT * FROM logs ORDER BY waktu DESC LIMIT 100")->fetchAl
                             <span class="ms-2 text-dark small fw-bold d-none d-md-inline"><?= $_SESSION['nama'] ?></span>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end shadow">
-                            <li><a href="#" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalEditProfil">
-    <i class="bi bi-person-circle"></i> Edit Profil
-</a></li>
+                            <li><a class="dropdown-item" href="edit_profil.php">Edit Profil</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item text-danger" href="logout.php">Logout</a></li>
                         </ul>
@@ -171,12 +160,20 @@ $logs = $pdo->query("SELECT * FROM logs ORDER BY waktu DESC LIMIT 100")->fetchAl
                             <li class="list-group-item d-flex justify-content-between align-items-center">User <span class="badge bg-primary"><?= $total_reg ?></span></li>
                         </ul>
                     </div>
-                    <div class="card shadow p-3 mb-3">
-						<div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
-							<span class="small fw-bold"><i class="bi bi-clock-history me-2"></i>Riwayat</span>
-						</div>
-						
-					</div>
+                    <div class="card shadow">
+                        <div class="card-header bg-dark text-white small py-2">Log Terakhir</div>
+                        <div class="card-body p-0">
+                            <table id="tabelLog" class="table table-sm mb-0" style="font-size: 0.8rem;">
+                                <thead><tr><th>Waktu</th><th>Aksi</th></tr></thead>
+                                <tbody>
+                                    <?php foreach(array_slice($logs, 0, 5) as $l): ?>
+                                    <tr><td><?= $l['waktu'] ?></td><td><?= $l['aksi'] ?></td></tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="card shadow p-4 mb-5">
@@ -208,89 +205,6 @@ $logs = $pdo->query("SELECT * FROM logs ORDER BY waktu DESC LIMIT 100")->fetchAl
                     </table>
                 </div>
             </div>
-			<div class="row mt-4 mb-5">
-    <div class="col-12">
-        <div class="card shadow border-0">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>Riwayat Aktivitas Sistem</h5>
-                <button class="btn btn-sm btn-outline-light" onclick="location.reload()">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh Log
-                </button>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="tabelLogLengkap" class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th width="15%">Waktu</th>
-                                <th width="15%">User</th>
-                                <th width="20%">Aksi</th>
-                                <th width="50%">Detail Aktivitas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach($logs as $log): ?>
-                            <tr>
-                                <td class="small text-muted">
-                                    <i class="bi bi-calendar-event me-1"></i> <?= date('d M Y', strtotime($log['waktu'])); ?><br>
-                                    <i class="bi bi-clock me-1"></i> <?= date('H:i:s', strtotime($log['waktu'])); ?>
-                                </td>
-                                <td>
-                                    <span class="badge bg-secondary px-2 py-2">
-                                        <i class="bi bi-person-fill me-1"></i> <?= htmlspecialchars($log['username']); ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span class="fw-bold text-dark"><?= htmlspecialchars($log['aksi']); ?></span>
-                                </td>
-                                <td class="text-muted small">
-                                    <?= htmlspecialchars($log['detail']); ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-        </div>
-    </div>
-</div>
-
-<div class="modal fade" id="modalEditProfil" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-person-gear"></i> Edit Profil Saya</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="formEditProfil" enctype="multipart/form-data">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Nama Lengkap</label>
-                        <input type="text" name="nama_lengkap" class="form-control" value="<?= $_SESSION['nama']; ?>" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Username</label>
-                        <input type="text" class="form-control" value="<?= $_SESSION['username']; ?>" readonly>
-                        <small class="text-muted text-xs">*Username tidak dapat diubah</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Password Baru</label>
-                        <input type="password" name="password" class="form-control" placeholder="Kosongkan jika tidak ingin ganti">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Foto Profil</label>
-                        <input type="file" name="foto" class="form-control" accept="image/*">
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
-                </div>
-            </form>
         </div>
     </div>
 </div>
@@ -302,100 +216,33 @@ $logs = $pdo->query("SELECT * FROM logs ORDER BY waktu DESC LIMIT 100")->fetchAl
 <script src="https://cdn.datatables.net/buttons/3.0.0/js/dataTables.buttons.js"></script>
 <script src="https://cdn.datatables.net/buttons/3.0.0/js/buttons.bootstrap5.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/3.0.0/js/buttons.html5.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-
-<script src="https://cdn.datatables.net/buttons/3.0.0/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/3.0.0/js/buttons.print.min.js"></script>
-
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.highcharts.com/highcharts.js"></script>
-
-
-
 
 <script>
 $(document).ready(function() {
     // 1. Sidebar Toggle
-    $(document).ready(function() {
-    // 1. Fungsi Utama Toggle Sidebar
     $("#sidebarToggle").click(function(e) {
-        e.stopPropagation(); // Mencegah event bubbling
         e.preventDefault();
         $("body").toggleClass("sb-sidenav-toggled");
-        
         // Resize Highcharts agar grafik menyesuaikan lebar baru
         setTimeout(() => { window.dispatchEvent(new Event('resize')); }, 300);
     });
 
-    // 2. Menutup Sidebar saat Klik di Luar (Area Konten)
-    // Hanya bekerja saat mode sidebar terbuka (sb-sidenav-toggled)
-    $("#page-content-wrapper").click(function() {
-        if ($("body").hasClass("sb-sidenav-toggled")) {
-            // Cek jika layar sedang di mode mobile/minimize (lebar < 768px)
-            // Atau jika Anda ingin fitur ini di semua ukuran layar, hapus kondisi width
-            if ($(window).width() <= 768) {
-                $("body").removeClass("sb-sidenav-toggled");
-            }
-        }
-    });
-
-    // 3. Mencegah penutupan saat mengeklik di dalam sidebar itu sendiri
-    $("#sidebar-wrapper").click(function(e) {
-        e.stopPropagation();
-    });
-});
     // 2. DataTables User
     $('#tabelUser').DataTable({
         layout: {
-            topStart: {
-                buttons: [
-                    // Tombol Excel
-                    {
-                        extend: 'excelHtml5',
-                        text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel',
-                        className: 'btn btn-success btn-sm',
-                        exportOptions: { columns: [0, 1, 2, 3] }
-                    },
-                    // Tombol PDF
-                    {
-                        extend: 'pdfHtml5',
-                        text: '<i class="bi bi-file-earmark-pdf me-1"></i> PDF',
-                        className: 'btn btn-danger btn-sm',
-                        exportOptions: { columns: [0, 1, 2, 3] },
-                        // Mengatur orientasi kertas
-                        customize: function (doc) {
-                            doc.content[1].table.widths = ['10%', '40%', '25%', '25%'];
-                        }
-                    },
-                    // Tombol Print
-                    {
-                        extend: 'print',
-                        text: '<i class="bi bi-printer me-1"></i> Print',
-                        className: 'btn btn-dark btn-sm',
-                        exportOptions: { columns: [0, 1, 2, 3] }
-                    }
-                ]
-            }
+            topStart: { buttons: ['excel', 'pdf', 'print'] }
         },
-        language: {
-            url: "https://cdn.datatables.net/plug-ins/1.13.7/i18n/id.json"
-        }
+        language: { searchPlaceholder: "Cari user..." }
     });
 
     // 3. DataTables Log
-   $('#tabelLogLengkap').DataTable({
-        "order": [[0, "desc"]], // Urutkan berdasarkan waktu terbaru
-        "pageLength": 5,
-        "lengthMenu": [5, 10, 25, 50, 100],
-        "language": {
-            "url": "https://cdn.datatables.net/plug-ins/1.13.7/i18n/id.json",
-            "search": "Cari aktivitas:",
-            "searchPlaceholder": "Ketik user, aksi, atau detail..."
-        },
-        "dom": '<"row mb-3"<"col-md-6"l><"col-md-6"f>>rt<"row mt-3"<"col-md-6"i><"col-md-6"p>>'
+    $('#tabelLog').DataTable({
+        pageLength: 5,
+        lengthChange: false,
+        searching: false,
+        info: false
     });
 
     // 4. SweetAlert Hapus
@@ -426,31 +273,6 @@ $(document).ready(function() {
         }]
     });
 });
-
-$(document).ready(function() {
-    $('#formEditProfil').on('submit', function(e) {
-        e.preventDefault();
-        let formData = new FormData(this);
-
-        $.ajax({
-            url: 'update_profil_ajax.php', // File pemroses baru
-            type: 'POST',
-            data: formData,
-            contentType: false,
-            processData: false,
-            success: function(response) {
-                let data = JSON.parse(response);
-                if (data.status === 'success') {
-                    alert('Profil berhasil diperbarui!');
-                    location.reload(); // Refresh untuk melihat perubahan nama/foto
-                } else {
-                    alert('Gagal: ' + data.message);
-                }
-            }
-        });
-    });
-});
 </script>
-
 </body>
 </html>

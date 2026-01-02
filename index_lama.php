@@ -1,3 +1,5 @@
+<!-- belum memakai SweetAlert2-->
+
 <?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -5,7 +7,6 @@
     <meta charset="UTF-8">
     <title>Login System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body class="bg-light">
     <div class="container mt-5">
@@ -13,15 +14,12 @@
             <div class="col-md-4">
                 
                 <?php if(isset($_SESSION['msg'])): ?>
-					<script>
-						Swal.fire({
-							icon: '<?= $_SESSION['msg_type'] == 'success' ? 'success' : 'error' ?>',
-							title: '<?= $_SESSION['msg_type'] == 'success' ? 'Berhasil!' : 'Oops...' ?>',
-							text: '<?= $_SESSION['msg'] ?>',
-							confirmButtonColor: '#3085d6'
-						});
-					</script>
-					<?php unset($_SESSION['msg']); unset($_SESSION['msg_type']); endif; ?>
+                    <div class="alert alert-<?= $_SESSION['msg_type']; ?> alert-dismissible fade show" role="alert">
+                        <?= $_SESSION['msg']; ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <?php unset($_SESSION['msg']); unset($_SESSION['msg_type']); ?>
+                <?php endif; ?>
 
                 <div class="card shadow border-0">
                     <div class="card-body p-4">

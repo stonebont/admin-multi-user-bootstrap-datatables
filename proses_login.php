@@ -6,6 +6,7 @@ date_default_timezone_set('Asia/Makassar');
 // Di file koneksi.php, tambahkan perintah set timezone untuk MySQL setelah koneksi PDO
 // $pdo->exec("SET time_zone = '+07:00'"); // Sesuaikan dengan lokasi Anda
 require 'koneksi.php';
+require 'fungsi_log.php';
 
 $username = $_POST['username'];
 $password = $_POST['password'];
@@ -45,8 +46,12 @@ if ($user) {
         $_SESSION['username'] = $user['username'];
         $_SESSION['nama']     = $user['nama_lengkap'];
         $_SESSION['level']    = $user['level'];
+		$_SESSION['user_id'] = $user['id']; // Pastikan baris ini ada
+
 
         header("Location: " . ($user['level'] == 'admin' ? "admin_dashboard.php" : "user_dashboard.php"));
+		tulis_log($pdo, $user['username'], "Login", "User berhasil login ke sistem.");
+		
     } else {
         // Password Salah: Tambah hitungan attempt
         $new_attempts = $user['login_attempts'] + 1;
