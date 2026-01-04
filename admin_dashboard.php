@@ -20,7 +20,9 @@ $total_reg = $pdo->query("SELECT COUNT(*) FROM users WHERE level = 'user'")->fet
 $last_activity = $pdo->query("SELECT aksi, waktu FROM logs ORDER BY waktu DESC LIMIT 1")->fetch();
 
 // Data Tabel
-$users = $pdo->query("SELECT id, nama_lengkap, username, level FROM users")->fetchAll(PDO::FETCH_ASSOC);
+// Cari bagian query data tabel, ubah menjadi seperti ini:
+// Cari bagian query data tabel, ubah menjadi seperti ini:
+$users = $pdo->query("SELECT id, nama_lengkap, username, email, level, is_active FROM users")->fetchAll(PDO::FETCH_ASSOC);
 $logs = $pdo->query("SELECT * FROM logs ORDER BY waktu DESC LIMIT 100")->fetchAll();
 ?>
 
@@ -175,40 +177,69 @@ $logs = $pdo->query("SELECT * FROM logs ORDER BY waktu DESC LIMIT 100")->fetchAl
 						<div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-2">
 							<span class="small fw-bold"><i class="bi bi-clock-history me-2"></i>Riwayat</span>
 						</div>
-						
 					</div>
             </div>
 
-            <div class="card shadow p-4 mb-5">
+            <div class="card shadow p-4 mb-5 mt-1">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="fw-bold">Daftar Pengguna</h5>
                     <a href="register.php" class="btn btn-primary btn-sm">+ Tambah User</a>
                 </div>
                 <div class="table-responsive">
                     <table id="tabelUser" class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr><th>No</th><th>Nama</th><th>Username</th><th>Level</th><th>Aksi</th></tr>
-                        </thead>
-                        <tbody>
-                            <?php $no=1; foreach($users as $u): ?>
-                            <tr>
-                                <td><?= $no++ ?></td>
-                                <td><?= htmlspecialchars($u['nama_lengkap']) ?></td>
-                                <td><?= htmlspecialchars($u['username']) ?></td>
-                                <td><span class="badge <?= $u['level']=='admin'?'bg-danger':'bg-info' ?>"><?= strtoupper($u['level']) ?></span></td>
-                                <td>
-                                    <div class="btn-group">
-                                        <a href="edit_user.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-warning">Edit</a>
-                                        <a href="hapus_user.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-danger btn-hapus">Hapus</a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+						<thead class="table-light">
+							<tr>
+								<th>No</th>
+								<th>Nama</th>
+								<th>Username</th><th>Email</th>
+								<th>Level</th>
+								<th>Status</th> <th>Aksi</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php $no=1; foreach($users as $u): ?>
+							<tr>
+								<td><?= $no++ ?></td>
+								<td><?= htmlspecialchars($u['nama_lengkap']) ?></td>
+								<td><?= htmlspecialchars($u['username']) ?></td>
+								<td><a href="mailto:<?= htmlspecialchars($u['email']) ?>" class="text-decoration-none small"><?= htmlspecialchars($u['email']) ?></a></td>
+								<td>
+									<span class="badge <?= $u['level']=='admin'?'bg-danger':'bg-info' ?>">
+										<?= strtoupper($u['level']) ?>
+									</span>
+								</td>
+								<td>
+									<?php if($u['is_active'] == 1): ?>
+										<span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Aktif</span>
+									<?php else: ?>
+										<span class="badge bg-secondary"><i class="bi bi-x-circle me-1"></i> Non-aktif</span>
+									<?php endif; ?>
+								</td>
+								<td>
+									<div class="btn-group">
+										<?php if($u['id'] != $_SESSION['user_id']): ?>
+											<button class="btn btn-sm <?= $u['is_active'] == 1 ? 'btn-outline-secondary' : 'btn-success' ?> btn-toggle-status" 
+													data-id="<?= $u['id'] ?>" 
+													data-status="<?= $u['is_active'] ?>"
+													title="<?= $u['is_active'] == 1 ? 'Non-aktifkan User' : 'Aktifkan User' ?>">
+												<i class="bi <?= $u['is_active'] == 1 ? 'bi-person-dash' : 'bi-person-check' ?>"></i>
+											</button>
+										<?php endif; ?>
+										
+										<a href="edit_user.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-warning"><i class="bi bi-pencil"></i></a>
+										
+										<?php if($u['id'] != $_SESSION['user_id']): ?>
+											<a href="hapus_user.php?id=<?= $u['id'] ?>" class="btn btn-sm btn-outline-danger btn-hapus"><i class="bi bi-trash"></i></a>
+										<?php endif; ?>
+									</div>
+								</td>
+							</tr>
+							<?php endforeach; ?>
+						</tbody>
+					</table>
                 </div>
-            </div>
-			<div class="row mt-4 mb-5">
+			</div>
+<div class="row mt-4 mb-5">
     <div class="col-12">
         <div class="card shadow border-0">
             <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
@@ -347,8 +378,52 @@ $(document).ready(function() {
         e.stopPropagation();
     });
 });
-    // 2. DataTables User
-    $('#tabelUser').DataTable({
+    // 4. DataTables User
+   // Logic untuk Aktifkan/Non-aktifkan User
+$('#tabelUser').on('click', '.btn-toggle-status', function() {
+    const userId = $(this).data('id');
+    const currentStatus = $(this).data('status');
+    const newStatus = currentStatus == 1 ? 0 : 1;
+    const actionText = newStatus == 1 ? 'MENGAKTIFKAN' : 'MENONAKTIFKAN';
+    const color = newStatus == 1 ? '#198754' : '#6c757d';
+
+    Swal.fire({
+        title: "Konfirmasi Status",
+        text: `Apakah Anda yakin ingin ${actionText} user ini?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonColor: color,
+        confirmButtonText: "Ya, Ubah!",
+        cancelButtonText: "Batal"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: 'update_status_user.php', // Pastikan file ini sudah dibuat
+                type: 'POST',
+                data: { id: userId, status: newStatus },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: res.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload(); 
+                        });
+                    } else {
+                        Swal.fire("Gagal", res.message, "error");
+                    }
+                },
+                error: function() {
+                    Swal.fire("Error", "Gagal menghubungi server.", "error");
+                }
+            });
+        }
+    });
+}).DataTable({
         layout: {
             topStart: {
                 buttons: [
@@ -357,17 +432,17 @@ $(document).ready(function() {
                         extend: 'excelHtml5',
                         text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel',
                         className: 'btn btn-success btn-sm',
-                        exportOptions: { columns: [0, 1, 2, 3] }
+                        exportOptions: { columns: [0, 1, 2, 3, 4] }
                     },
                     // Tombol PDF
                     {
                         extend: 'pdfHtml5',
                         text: '<i class="bi bi-file-earmark-pdf me-1"></i> PDF',
                         className: 'btn btn-danger btn-sm',
-                        exportOptions: { columns: [0, 1, 2, 3] },
+                        exportOptions: { columns: [0, 1, 2, 3, 4] },
                         // Mengatur orientasi kertas
                         customize: function (doc) {
-                            doc.content[1].table.widths = ['10%', '40%', '25%', '25%'];
+                            doc.content[1].table.widths = ['5%', '25%', '20%', '30%', '20%'];
                         }
                     },
                     // Tombol Print
@@ -375,7 +450,7 @@ $(document).ready(function() {
                         extend: 'print',
                         text: '<i class="bi bi-printer me-1"></i> Print',
                         className: 'btn btn-dark btn-sm',
-                        exportOptions: { columns: [0, 1, 2, 3] }
+                        exportOptions: { columns: [0, 1, 2, 3, 4] }
                     }
                 ]
             }
@@ -385,7 +460,7 @@ $(document).ready(function() {
         }
     });
 
-    // 3. DataTables Log
+    // 5. DataTables Log
    $('#tabelLogLengkap').DataTable({
         "order": [[0, "desc"]], // Urutkan berdasarkan waktu terbaru
         "pageLength": 5,
@@ -398,7 +473,7 @@ $(document).ready(function() {
         "dom": '<"row mb-3"<"col-md-6"l><"col-md-6"f>>rt<"row mt-3"<"col-md-6"i><"col-md-6"p>>'
     });
 
-    // 4. SweetAlert Hapus
+    // 6. SweetAlert Hapus
     $('#tabelUser').on('click', '.btn-hapus', function(e) {
         e.preventDefault();
         const url = $(this).attr('href');
@@ -413,7 +488,7 @@ $(document).ready(function() {
         });
     });
 
-    // 5. Highcharts
+    // 7. Highcharts
     Highcharts.chart('chartUser', {
         chart: { type: 'pie' },
         title: { text: 'Komposisi Level Pengguna' },
@@ -425,10 +500,8 @@ $(document).ready(function() {
             ]
         }]
     });
-});
-
-$(document).ready(function() {
-    $('#formEditProfil').on('submit', function(e) {
+	// 8. Edit Profil Admin
+	  $('#formEditProfil').on('submit', function(e) {
         e.preventDefault();
         let formData = new FormData(this);
 
@@ -451,6 +524,5 @@ $(document).ready(function() {
     });
 });
 </script>
-
 </body>
 </html>

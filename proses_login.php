@@ -39,14 +39,21 @@ if ($user) {
 
     // 2. Verifikasi Password
     if (password_verify($password, $user['password'])) {
+		// CEK APAKAH USER AKTIF
+    if ($user['is_active'] == 0) {
+        $_SESSION['msg'] = "Akun Anda telah dinonaktifkan oleh Admin. Silakan hubungi bantuan.";
+        $_SESSION['msg_type'] = "danger";
+        header("Location: index.php");
+        exit();
+    }
         // Login Berhasil: Reset attempts ke 0
         $reset = $pdo->prepare("UPDATE users SET login_attempts = 0, last_attempt_time = NULL WHERE id = ?");
         $reset->execute([$user['id']]);
 
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['nama']     = $user['nama_lengkap'];
-        $_SESSION['level']    = $user['level'];
-		$_SESSION['user_id'] = $user['id']; // Pastikan baris ini ada
+        $_SESSION['user_id'] = $user['id'];
+		$_SESSION['nama'] = $user['nama_lengkap'];
+		$_SESSION['username'] = $user['username'];
+		$_SESSION['level'] = $user['level'];
 
 
         header("Location: " . ($user['level'] == 'admin' ? "admin_dashboard.php" : "user_dashboard.php"));
